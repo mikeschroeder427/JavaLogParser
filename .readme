@@ -1,0 +1,5 @@
+LogParser contains main entry point.
+
+Update the threadPool property in the config.properties file to determine how many threads you want to use.
+
+Work in progress.
