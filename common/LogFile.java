@@ -18,7 +18,7 @@ import log_parser.utils.enums.CompressionType;
 
 public class LogFile {
 
-	private ArrayList<LogEntry> _logEntries = new ArrayList<LogEntry>();	//Refactor into custom object
+	private ArrayList<LogEntry> _logEntries = new ArrayList<LogEntry>();
 	private CompressionType _compressionType;
 	private File _file;
 	private Properties _prop;
@@ -28,7 +28,10 @@ public class LogFile {
 		_file = new File(file);
 		_prop = prop;		
 	}
-	
+	/**
+	 * Reads the log file, and stores log entries in local list.
+	 * @throws IOException
+	 */
 	public void LoadLogEntries() throws IOException {
 	    BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(_file))));
 	    String line = null;
@@ -41,7 +44,7 @@ public class LogFile {
 
 	/**
 	 	Writes log data to new compressed gz file. If a log entry has redacted data,
-	 	the LogEntries redacted line property will be printed out.
+	 	the outputted line will have redacted data removed.
 	*/
 	public void WriteToFile() throws IOException {
 		String outputDir = _prop.getProperty("outputDir");
@@ -73,22 +76,33 @@ public class LogFile {
 		return counter;
 	} 
 	/**
-	 * 
+	 * Reads in a log entry line, parses out property and determines 
+	 * if the line has redacted data
 	 * @param String line of one line.
 	 * @return
 	 */
 	private LogEntry processLine(String line) {
 		    return new LogEntry(line, _prop.getProperty("redactedFields"));
 	  }
-	
+	/**
+	 * Number of log entries in log file.
+	 * @return
+	 */
 	public int GetLogEntriesCount(){
 		return this._logEntries.size();
 	}
-	
+	/**
+	 * Returns log file name
+	 * @return
+	 */
 	public String GetFileName() {
 		return this._file.getName();
 	}
-	
+	/**
+	 * Returns a map of redacted fields and how many times they appeared
+	 * in a log file.
+	 * @return
+	 */
 	public HashMap<String, Integer> GetRedactedFieldTypesCount() {
 		HashMap<String, Integer> fields = new HashMap<String, Integer>();
 		

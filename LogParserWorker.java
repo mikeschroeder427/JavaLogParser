@@ -10,9 +10,10 @@ import java.util.Properties;
 import java.util.concurrent.Callable;
 
 import log_parser.common.LogFile;
-import log_parser.utils.FileUtils;
+import log_parser.utils.LogParserUtils;
+import log_parser.utils.enums.LogReturnType;
 
-public class LogParserWorker implements Callable<String> {
+public class LogParserWorker implements Callable<LogParserThreadResult> {
 	
 	String _fileName = null;
 	Properties _prop = null;
@@ -23,23 +24,33 @@ public class LogParserWorker implements Callable<String> {
 	}
 	
 	@Override
-	public String call() throws Exception {
-		LogFile lf = new LogFile(FileUtils.GetCompressionType(_fileName), _fileName, _prop);	
+	public LogParserThreadResult call() throws Exception {
+		
+		LogFile lf;
+		LogParserThreadResult res = new LogParserThreadResult();
 		_prop.getProperty("outputDir");
-		try {			
+		
+		try {
+			lf = new LogFile(LogParserUtils.GetCompressionType(_fileName), _fileName, _prop);
 			lf.LoadLogEntries();
-			lf.WriteToFile();
-			
-		} catch (IOException e) {
-			return "Error Parsing Log File: " + _fileName;
+			lf.WriteToFile();			
+		} catch (Exception e) {
+			res.ReturnText = String.format("%s FileName %s Error parsing file: %s", LogParserUtils.GetDate(), _fileName,  e.getMessage());
+			res.ReturnType = LogReturnType.ERROR;
+			return res;
 		}
-			
-		return ComposeReturnString(lf);
+					
+		res.ReturnText = ComposeReturnString(lf);
+		res.ReturnType = LogReturnType.SUCCESS;
+		
+		return res;
 	}
-	
+	/**
+	 * Generates an auditLog string with number of redacted fields, and a count of individual redacted fields.
+	 * @param lf
+	 * @return
+	 */
 	private String ComposeReturnString(LogFile lf) {
-		DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		Date date = new Date();		
 		String fileName = lf.GetFileName();
 		String totalEntries = String.valueOf(lf.GetLogEntriesCount());
 		String redactedEntries = String.valueOf(lf.GetRedactedCount());
@@ -52,8 +63,7 @@ public class LogParserWorker implements Callable<String> {
 			redactedFields += key + "=" + String.valueOf(val) + ", ";
 		}
 
-		return String.format("%s Filename: %s Total Lines Processed: %s Lines With Redacted Data: %s Fields Redacted Count: %s", df.format(date), fileName, totalEntries, redactedEntries, redactedFields );
+		return String.format("%s Filename: %s Total Lines Processed: %s Lines With Redacted Data: %s Redacted Fields Count: %s", LogParserUtils.GetDate(), fileName, totalEntries, redactedEntries, redactedFields );
 	}
-	
 	
 }

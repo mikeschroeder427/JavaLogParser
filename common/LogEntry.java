@@ -13,13 +13,22 @@ public class LogEntry {
 	private boolean _hasRedactedData = false;
 	private String _redactedString = "";	
 	private ArrayList<LogField> _fields = new ArrayList<LogField>();
-	
+	/**
+	 * LogEntry represents a single log line (row) in a log file.
+	 * @param Log Entry Line
+	 * @param Data that will be redacted, CSV format
+	 */
 	public LogEntry(String line, String redactedData){	
 		_logLine = line;
 		_redactedString = redactedData;
 		ParseLine(line);
 	}
-	
+	/**
+	 * Parses a log line, and will check for redacted data
+	 * If redacted data is found, the redacted data will be removed
+	 * and placed into a redactedString for audit output.
+	 * @param line
+	 */
 	private void ParseLine(String line) {
 		String[] split = line.split(" ");
 		_logDate = split[0].trim();
@@ -38,13 +47,14 @@ public class LogEntry {
 			LogField f = new LogField();
 			String name = s.split("=")[0].trim();
 			String val = s.split("=")[1].trim();
-			try{
+			
+			// If log entry contains redacted data, the log entry will be 
+			// flagged for further parsing
 			if (_redactedString.contains(name)) {
 				this._hasRedactedData = true;
 				f.isRedacted = true;
 			}
-			}
-			catch (Exception e){}
+					
 			f.Name = name;
 			f.Value = val;		
 			_fields.add(f);
@@ -54,7 +64,9 @@ public class LogEntry {
 			ParseRedactedLogLine();
 		
 	}	
-
+	/**
+	 * Removes redacted data from log line.
+	 */
 	private void ParseRedactedLogLine() {
 		String logLine = this._logLine;
 		String tmpLine = " ";
@@ -70,19 +82,32 @@ public class LogEntry {
 		
 		this._redactedLogLine = logLine + tmpLine;	
 	}
-	
+	/**
+	 * Checks if LogEntry contains redacted data.
+	 * @return
+	 */
 	public boolean HasRedactedData() {
 		return _hasRedactedData;
 	}
-	
+	/**
+	 * Returns raw log line
+	 * @return
+	 */
 	public String GetLogLine(){
 		return this._logLine;
 	}
 	
+	/**
+	 * Returns list of fields in the log line.
+	 * @return
+	 */
 	public ArrayList<LogField> GetFieldsList() {
 		return this._fields;
 	}
-	
+	/**
+	 * Returns redacted log line.
+	 * @return
+	 */
 	public String GetRedactedLogLine(){
 		return this._redactedLogLine;
 	}
